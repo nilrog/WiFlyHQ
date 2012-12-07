@@ -260,7 +260,9 @@ public:
     void sendChunkln(const __FlashStringHelper *str);
     void sendChunkln(void);
 
+#ifndef __arm__
     int getFreeMemory();
+#endif /* __arm__ */
     void terminal();
   
     using Print::write;

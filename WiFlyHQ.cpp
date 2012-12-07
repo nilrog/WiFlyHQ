@@ -28,6 +28,14 @@
  */
 
 #include "WiFlyHQ.h"
+#include <stdarg.h>
+
+#ifdef __arm__
+#define strlen_P strlen
+#define strstr_P strstr
+#define strncpy_P strncpy
+#define strncmp_P strncmp
+#endif /* __arm__ */
 
 /* For free memory check */
 extern unsigned int __bss_end;
@@ -76,6 +84,7 @@ extern void *__brkval;
 #define WIFLY_RATE_48MBPS	14
 #define WIFLY_RATE_54MBPS	15
 
+#ifndef __arm__
 /* Work around a bug with PROGMEM and PSTR where the compiler always
  * generates warnings.
  */
@@ -83,6 +92,7 @@ extern void *__brkval;
 #define PROGMEM __attribute__(( section(".progmem.data") )) 
 #undef PSTR 
 #define PSTR(s) (__extension__({static prog_char __c[] PROGMEM = (s); &__c[0];})) 
+#endif /* __arm__ */
 
 /* Request and response strings in PROGMEM */
 const prog_char req_GetIP[] PROGMEM = "get ip\r";
@@ -131,7 +141,11 @@ const prog_char resp_Replace[] PROGMEM = "Replace=";
 static struct {
     const prog_char *req;
     const prog_char *resp;
+#ifdef __arm__
+} __attribute__((packed)) requests[] = {
+#else
 } requests[] = {
+#endif /* __arm__ */
     { req_GetIP,	resp_IP },	 /* 0 */
     { req_GetIP,	resp_NM },	 /* 1 */
     { req_GetIP,	resp_GW },	 /* 2 */
@@ -397,6 +411,7 @@ boolean WiFly::begin(Stream *serialdev, Stream *debugPrint)
     return true;
 }
 
+#ifndef __arm__
 /**
  * Return number of bytes of memory available.
  * @returns number of bytes of free memory
@@ -412,6 +427,7 @@ int WiFly::getFreeMemory()
 
     return free;
 }
+#endif /* __arm__ */
 
 /**
  * Flush the incoming data from the WiFly.
@@ -986,7 +1002,11 @@ int8_t WiFly::multiMatch_P(const prog_char *str[], uint8_t count, uint16_t timeo
     struct {
 	bool active;
 	const prog_char *str;
+#ifdef __arm__
+    } __attribute__((packed)) match[count];
+#else
     } match[count];
+#endif /* __arm__ */
     char ch, ch_P;
     uint8_t ind;
 
@@ -1521,7 +1541,11 @@ int8_t WiFly::getDHCPMode()
 static struct {
     uint8_t protocol;
     char name[6];
+#ifdef __arm__
+} __attribute__((packed)) protmap[] = {
+#else
 } protmap[] __attribute__((__progmem__)) = {
+#endif /* __arm__ */
     { WIFLY_PROTOCOL_UDP,	 "UDP," },
     { WIFLY_PROTOCOL_TCP, 	 "TCP," },
     { WIFLY_PROTOCOL_SECURE, 	 "SECUR" },
@@ -2060,7 +2084,11 @@ char WiFly::getSpaceReplace(void)
 static struct {
     uint32_t rate;
     uint8_t setting;
+#ifdef __arm__
+} __attribute__((packed)) rateMap[] = {
+#else
 } rateMap[] __attribute__((__progmem__)) = {
+#endif /* __arm__ */
     {  1000000, WIFLY_RATE_1MBPS   },
     {  2000000, WIFLY_RATE_2MBPS   },
     {  5500000, WIFLY_RATE_5_5MBPS },
